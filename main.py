@@ -129,18 +129,18 @@ def truck_deliver_packages(truck):
         #print(f"ID: {next_package.ID}, Deadline: {next_package.deadline}, [{status_color}{next_package.status}{Style.RESET_ALL}], Departure Time: {next_package.departure_time}, Delivery Time: {next_package.delivery_time}")
 
 def main():
-    with open("addressCSV.csv") as addy_csv:
+    with open("WGUPS_Addresses.csv") as addy_csv:
         global AddressCSV
         AddressCSV = csv.reader(addy_csv)
         AddressCSV = list(AddressCSV)
-    with open("distanceCSV.csv") as dis_csv:
+    with open("WGUPS_Distances.csv") as dis_csv:
         global DistanceCSV
         DistanceCSV = csv.reader(dis_csv)
         DistanceCSV = list(DistanceCSV)
 
     global package_hash
     package_hash = HashTable()
-    load_package_data('packageCSV.csv')
+    load_package_data('WGUPS_ Packages.csv')
 
     truck1 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=8), [1, 13, 14, 15, 16, 19, 20, 27, 29, 30, 34, 37])
     truck2 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=11), [2, 3, 4, 5, 9, 18, 26, 28, 32, 35, 36, 38, 40])
