@@ -1,30 +1,44 @@
+# Lauren March
+# Student ID: 001421111
+
 import csv
 import datetime
 from colorama import Fore, Style
-from termcolor import colored
 
+
+# HashTable class to create hashmap with chaining to handle collisions
+# Create insert and lookup functions for packages to be stored and accessed.
 class HashTable:
-    def __init__(self, initial_capacity=40):
-        self.table = [[] for _ in range(initial_capacity)]
+    # Constructor for hashmap, allocates 40 empty buckets into a list
+    # Each bucket is an empty list to handle collisions via chaining
+    def __init__(self):
+        self.size = 40
+        self.map = [[] for _ in range(self.size)]
 
+    # Simple custom hash function that stores packages by ID % 40
+    def packages_hash(self, key):
+        return key % self.size
+    
+    # Inse
     def insert(self, key, item):
-        bucket = hash(key) % len(self.table)
-        bucket_list = self.table[bucket]
+        bucket = self.packages_hash(key)
+        bucket_list = self.map[bucket]
+
         for kv in bucket_list:
             if kv[0] == key:
                 kv[1] = item
                 return True
-        key_value = [key, item]
-        bucket_list.append(key_value)
+        bucket_list.append([key, item])
         return True
 
     def search(self, key):
-        bucket = hash(key) % len(self.table)
-        bucket_list = self.table[bucket]
+        bucket = self.packages_hash(key)
+        bucket_list = self.map[bucket]
+
         for kv in bucket_list:
             if kv[0] == key:
                 return kv[1]
-        return None 
+        return None
 
 class Packages:
     def __init__(self, ID, street, city, state, zip_code, deadline, weight, notes, status, departure_time, delivery_time):
@@ -125,26 +139,29 @@ def truck_deliver_packages(truck):
         truck.time += datetime.timedelta(hours=distance_to_next / truck.speed)
         next_package.delivery_time = truck.time
         next_package.departure_time = truck.depart_time
-        status_color = Fore.GREEN if next_package.status == "Delivered" else Fore.YELLOW if next_package.status == "En route" else Fore.RED
-        #print(f"ID: {next_package.ID}, Deadline: {next_package.deadline}, [{status_color}{next_package.status}{Style.RESET_ALL}], Departure Time: {next_package.departure_time}, Delivery Time: {next_package.delivery_time}")
+        
+    if truck.depart_time == datetime.timedelta(hours=8):
+        # Truck1 should return to the hub after deliveries
+        truck.miles += between(address(truck.current_location), address("4001 South 700 East"))  # Adding return trip to hub
+        truck.current_location = "4001 South 700 East"
 
 def main():
-    with open("WGUPS_Addresses.csv") as addy_csv:
+    with open("WGUPS_Addresses.csv") as address_csv:
         global AddressCSV
-        AddressCSV = csv.reader(addy_csv)
+        AddressCSV = csv.reader(address_csv)
         AddressCSV = list(AddressCSV)
-    with open("WGUPS_Distances.csv") as dis_csv:
+    with open("WGUPS_Distances.csv") as distance_csv:
         global DistanceCSV
-        DistanceCSV = csv.reader(dis_csv)
+        DistanceCSV = csv.reader(distance_csv)
         DistanceCSV = list(DistanceCSV)
 
     global package_hash
     package_hash = HashTable()
-    load_package_data('WGUPS_ Packages.csv')
+    load_package_data('WGUPS_Packages.csv')
 
-    truck1 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=8), [1, 13, 14, 15, 16, 19, 20, 27, 29, 30, 34, 37])
-    truck2 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=11), [2, 3, 4, 5, 9, 18, 26, 28, 32, 35, 36, 38, 40])
-    truck3 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=9, minutes=5), [6, 7, 8, 10, 11, 12, 17, 21, 22, 23, 24, 25, 31, 33, 39])
+    truck1 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=8), [1, 13, 14, 15, 16, 19, 20, 25, 27, 29, 30, 34, 37, 40])
+    truck2 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=11), [2, 3, 4, 5, 9, 18, 26, 28, 32, 35, 36, 38])
+    truck3 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=9, minutes=5), [6, 7, 8, 10, 11, 12, 17, 21, 22, 23, 24, 31, 33, 39])
 
     truck_deliver_packages(truck1)
     truck_deliver_packages(truck3)
@@ -154,14 +171,13 @@ def main():
     header = Fore.CYAN + 'Welcome to Western Governors University Parcel Service!' + Style.RESET_ALL
     print(f'{header}')
 
-    total_miles = truck1.miles + truck2.miles + truck3.miles
-    print(Fore.LIGHTBLUE_EX + f'The total miles traveled are: {total_miles:.2f}', Style.RESET_ALL)
-
     while True:
         user_input = input(Fore.LIGHTBLACK_EX + "Please enter a time (HH:MM), or enter 'exit' to quit: " + Style.RESET_ALL)
         
         # Check if the user wants to exit
         if user_input.lower() == 'exit' or user_input.lower() == 'quit':
+            total_miles = truck1.miles + truck2.miles + truck3.miles
+            print(Fore.LIGHTBLUE_EX + f'The total miles traveled by all trucks is: {total_miles:.2f}', Style.RESET_ALL)
             print("Exiting the program.")
             break
         
@@ -200,10 +216,10 @@ def main():
                         f"{package.street:<45} {package.city:<20} {package.state:<10} {package.zip_code:<15} "
                         f"{status_color}{package.status:<15}{Style.RESET_ALL} "
                         f"{package.deadline:<15} {package.departure_time}")
+                    
 
         except ValueError as e:
             print(Fore.RED + str(e) + Style.RESET_ALL)
-
 
 
 
