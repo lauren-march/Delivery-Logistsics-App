@@ -40,6 +40,7 @@ class HashTable:
                 return kv[1]
         return None
 
+# Creating a package class that includes all required package info
 class Packages:
     def __init__(self, ID, street, city, state, zip_code, deadline, weight, notes, status, departure_time, delivery_time):
         self.ID = ID
@@ -57,6 +58,7 @@ class Packages:
     def __str__(self):
         return f"ID: {self.ID}, {self.street}, {self.city}, {self.state}, {self.zip_code}, Deadline: {self.deadline}, {self.weight}, {self.status}, Departure Time: {self.departure_time}, Delivery Time: {self.delivery_time}"
 
+    # Will update the status of packages from "At the Hub" to "En-Route" to "Delivered" at appropriate datetime
     def status_update(self, time_change):
         if self.delivery_time is None:
             self.status = "At the hub"
@@ -70,6 +72,7 @@ class Packages:
             self.street = "410 S State St"  
             self.zip_code = "84111"    
 
+# Creating truck class with all required attributes
 class Trucks:
     def __init__(self, speed, miles, current_location, depart_time, packages):
         self.speed = speed
@@ -82,17 +85,21 @@ class Trucks:
     def __str__(self):
         return f"{self.speed},{self.miles},{self.current_location},{self.time},{self.depart_time},{self.packages}"
 
+# Function to read AddressCSV and load into 2D array
 def address(address):
     for row in AddressCSV:
         if address in row[2]:
            return int(row[0])
 
+# This function is the distance matrix for the distance between 2 addresses 
 def between(address1, address2):
     distance = DistanceCSV[address1][address2]
     if distance == '':
         distance = DistanceCSV[address2][address1]
     return float(distance)
 
+# This loads the package info into the hash table create from HashTable class
+# This uses the p_id as the key, and the rest of the package info as the value pair
 def load_package_data(filename):
     with open(filename) as package_file:
         package_info = csv.reader(package_file, delimiter=',')
@@ -113,6 +120,7 @@ def load_package_data(filename):
             p = Packages(p_id, p_street, p_city, p_state, p_zip, p_deadline, p_weight, p_notes, p_status, p_departure_time, p_delivery_time)
             package_hash.insert(p_id, p)
 
+# This is the variation of the nearest neighbor algo for delivering packages
 def select_next_package(current_location, packages):
     min_distance = float('inf')
     closest_package = None
@@ -123,6 +131,9 @@ def select_next_package(current_location, packages):
             closest_package = package
     return closest_package
 
+# Stores packages on trucks in list by search function to find p_ids 
+# Uses nearest neighbor algo to deliever packages
+# Tells truck1 to return to hub so truck2 can depart with truck1's driver
 def truck_deliver_packages(truck):
     en_route = []
     for package_id in truck.packages:
@@ -139,13 +150,19 @@ def truck_deliver_packages(truck):
         truck.time += datetime.timedelta(hours=distance_to_next / truck.speed)
         next_package.delivery_time = truck.time
         next_package.departure_time = truck.depart_time
-        
+
+    # Truck1 should return to the hub after deliveries   
     if truck.depart_time == datetime.timedelta(hours=8):
-        # Truck1 should return to the hub after deliveries
-        truck.miles += between(address(truck.current_location), address("4001 South 700 East"))  # Adding return trip to hub
+        
+        # Adding return trip to hub to toal miles
+        truck.miles += between(address(truck.current_location), address("4001 South 700 East"))  
         truck.current_location = "4001 South 700 East"
 
 def main():
+    # Made these global so they can be accessed outside of their scope
+    global AddressCSV, DistanceCSV, package_hash
+    
+    # Open both csvs using the csv library
     with open("WGUPS_Addresses.csv") as address_csv:
         global AddressCSV
         AddressCSV = csv.reader(address_csv)
@@ -155,14 +172,16 @@ def main():
         DistanceCSV = csv.reader(distance_csv)
         DistanceCSV = list(DistanceCSV)
 
-    global package_hash
+    # Initializing the HashTable() function in order to call class methods further below
     package_hash = HashTable()
     load_package_data('WGUPS_Packages.csv')
 
+    # Loading the trucks manually for simplicity
     truck1 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=8), [1, 13, 14, 15, 16, 19, 20, 25, 27, 29, 30, 34, 37, 40])
     truck2 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=11), [2, 3, 4, 5, 9, 18, 26, 28, 32, 35, 36, 38])
     truck3 = Trucks(18, 0.0, "4001 South 700 East", datetime.timedelta(hours=9, minutes=5), [6, 7, 8, 10, 11, 12, 17, 21, 22, 23, 24, 31, 33, 39])
 
+    # Trucks sent out for delivery, handles the need for truck1 to come back to hub
     truck_deliver_packages(truck1)
     truck_deliver_packages(truck3)
     truck2.depart_time = min(truck1.time, truck3.time)
@@ -171,16 +190,20 @@ def main():
     header = Fore.CYAN + 'Welcome to Western Governors University Parcel Service!' + Style.RESET_ALL
     print(f'{header}')
 
+    # Made this a continuous loop until the user would like to end the program
+    # This way a user can get multiple packages/times without having to restart program
     while True:
         user_input = input(Fore.LIGHTBLACK_EX + "Please enter a time (HH:MM), or enter 'exit' to quit: " + Style.RESET_ALL)
         
-        # Check if the user wants to exit
+        # Check if the user wants to exit program
+        # This will print the total_miles for every truck
         if user_input.lower() == 'exit' or user_input.lower() == 'quit':
             total_miles = truck1.miles + truck2.miles + truck3.miles
             print(Fore.LIGHTBLUE_EX + f'The total miles traveled by all trucks is: {total_miles:.2f}', Style.RESET_ALL)
             print("Exiting the program.")
             break
         
+        # Error handling 
         try:
             if user_input:
                 (h, m) = user_input.split(":")
@@ -196,6 +219,8 @@ def main():
                 time_change = None
                 print(Fore.YELLOW + "No time entered. Continuing without time change." + Style.RESET_ALL)
 
+            # Error handling for invalid user input str when int needed or 'Enter' is pressed
+            # Will print all packages if invalid str or 'Enter' entered 
             try:
                 single_entry = [int(input("Please enter a Package ID, or hit 'Enter' to view all."))]
             except ValueError:
@@ -204,6 +229,9 @@ def main():
             print(f"{'ID':<5} {'Address':<45} {'City':<20} {'State':<10} {'Zip Code':<15} "
                 f"{'Status':<15} {'Deadline':<15} {'Departure Time'}")
 
+            # Uses search to search through packages until user input ID is found
+            # Once found info for that package will be output
+            # If invalid interger value then "Package ID not found." will be output
             for package_id in single_entry:
                 package = package_hash.search(package_id)
                 if package is None:
