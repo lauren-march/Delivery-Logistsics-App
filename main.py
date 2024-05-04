@@ -19,7 +19,7 @@ class HashTable:
     def packages_hash(self, key):
         return key % self.size
     
-    # Inse
+    # Insert function that inserts the package info into the existing hash table
     def insert(self, key, item):
         bucket = self.packages_hash(key)
         bucket_list = self.map[bucket]
@@ -30,7 +30,7 @@ class HashTable:
                 return True
         bucket_list.append([key, item])
         return True
-
+    # Search function that looks for the designated key (packageID) and finds the key and value pair associated
     def search(self, key):
         bucket = self.packages_hash(key)
         bucket_list = self.map[bucket]
@@ -60,6 +60,10 @@ class Packages:
 
     # Will update the status of packages from "At the Hub" to "En-Route" to "Delivered" at appropriate datetime
     def status_update(self, time_change):
+        if self.ID == 9 and time_change >= datetime.timedelta(hours=10, minutes=20):
+            self.street = "410 S State St"
+            self.zip_code = "84111"
+
         if self.delivery_time is None:
             self.status = "At the hub"
         elif time_change < self.departure_time:
@@ -68,9 +72,7 @@ class Packages:
             self.status = "En route"     
         else:
             self.status = "Delivered" 
-        if self.ID == 9 and time_change > datetime.timedelta(hours=10, minutes=20):
-            self.street = "410 S State St"  
-            self.zip_code = "84111"    
+ 
 
 # Creating truck class with all required attributes
 class Trucks:
@@ -227,7 +229,7 @@ def main():
                 single_entry = range(1, 41)
 
             print(f"{'ID':<5} {'Address':<45} {'City':<20} {'State':<10} {'Zip Code':<15} "
-                f"{'Status':<15} {'Deadline':<15} {'Departure Time'}")
+                f"{'Status':<14}  {'Deadline':<15} {'Delievery Time'}")
 
             # Uses search to search through packages until user input ID is found
             # Once found info for that package will be output
@@ -243,7 +245,7 @@ def main():
                     print(f"{id_color}{package.ID:<5}{Style.RESET_ALL} "
                         f"{package.street:<45} {package.city:<20} {package.state:<10} {package.zip_code:<15} "
                         f"{status_color}{package.status:<15}{Style.RESET_ALL} "
-                        f"{package.deadline:<15} {package.departure_time}")
+                        f"{package.deadline:<15} {package.delivery_time}")
                     
 
         except ValueError as e:
